@@ -187,7 +187,7 @@ export class UserExportService {
                 userId,
                 habitId: f.habitId && ownedHabitIds.has(f.habitId) ? f.habitId : undefined,
                 feedbackText: f.feedbackText,
-                source: f.source === 'openai' ? 'openai' : 'rule',
+                source: ['claude', 'openai', 'rule'].includes(f.source) ? f.source : 'rule',
                 consistencyScore: typeof f.consistencyScore === 'number' ? f.consistencyScore : 0,
                 streak: typeof f.streak === 'number' ? f.streak : 0,
                 rating: f.rating === 1 || f.rating === -1 ? f.rating : 0,

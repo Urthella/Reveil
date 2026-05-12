@@ -4,6 +4,9 @@
 .vscode
 *.log
 
+# Claude Code (local, personal overrides)
+.claude/settings.local.json
+
 # Node
 node_modules
 dist

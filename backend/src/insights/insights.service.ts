@@ -27,7 +27,7 @@ export interface PlatformInsights {
         thumbsUp: number;
         thumbsDown: number;
         thumbsDownRatio: number;          // among rated
-        sourceBreakdown: { openai: number; rule: number };
+        sourceBreakdown: { claude: number; openai: number; rule: number };
     };
     notifications: {
         tapsLast7d: number;
@@ -71,12 +71,14 @@ export class InsightsService {
         const rated = allFeedback.filter((f) => f.rating !== 0);
         const up = rated.filter((f) => f.rating === 1).length;
         const down = rated.filter((f) => f.rating === -1).length;
+        type FeedbackSource = 'claude' | 'openai' | 'rule';
         const sourceBreakdown = allFeedback.reduce(
-            (acc, f) => ({
-                ...acc,
-                [f.source as 'openai' | 'rule']: (acc[f.source as 'openai' | 'rule'] ?? 0) + 1,
-            }),
-            { openai: 0, rule: 0 } as { openai: number; rule: number },
+            (acc, f) => {
+                const key = (['claude', 'openai', 'rule'].includes(f.source) ? f.source : 'rule') as FeedbackSource;
+                acc[key] = (acc[key] ?? 0) + 1;
+                return acc;
+            },
+            { claude: 0, openai: 0, rule: 0 } as Record<FeedbackSource, number>,
         );
 
         const allHabits = await this.habits.find();

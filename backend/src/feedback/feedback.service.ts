@@ -9,10 +9,11 @@ import { TrackingService } from '../tracking/tracking.service';
 import { computeStats, daysAgoIso, HabitStats } from '../common/stats.util';
 
 type Locale = 'en' | 'tr';
+type FeedbackSource = 'claude' | 'openai' | 'rule';
 
 interface AiEngineResponse {
     feedbackText: string;
-    source: 'openai' | 'rule';
+    source: FeedbackSource;
 }
 
 @Injectable()
@@ -62,7 +63,7 @@ export class FeedbackService {
         };
 
         let feedbackText: string;
-        let source: 'openai' | 'rule' = 'rule';
+        let source: FeedbackSource = 'rule';
 
         try {
             const { data } = await firstValueFrom(

@@ -25,7 +25,7 @@ export class FeedbackLog {
     feedbackText: string;
 
     @Column({ default: 'rule' })
-    source: string; // 'openai' | 'rule'
+    source: string; // 'claude' | 'openai' | 'rule'
 
     @Column({ type: 'int', default: 0 })
     consistencyScore: number;

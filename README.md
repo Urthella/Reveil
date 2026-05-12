@@ -28,7 +28,7 @@ See [`docs/architecture.md`](docs/architecture.md) for view-by-view diagrams, [`
 
 - **Habits** with categories, weekly targets (1–7×/week), pause-until auto-resume, freeze days that protect streaks, sort, search, and 8 quick-start templates.
 - **Tracking** with mood (1–10) and notes; idempotent same-day upsert.
-- **AI feedback** with locale (TR/EN), category-aware hints, and tone selector (`coach / gentle / firm / playful`). OpenAI when `OPENAI_API_KEY` is set, deterministic rule-based fallback otherwise. All output passes a safety filter.
+- **AI feedback** with locale (TR/EN), category-aware hints, and tone selector (`coach / gentle / firm / playful`). Provider chain: Claude (`ANTHROPIC_API_KEY`) → OpenAI (`OPENAI_API_KEY`) → deterministic rule-based. Override via `AI_PROVIDER`. All output passes a safety filter.
 - **Dashboard** with consistency, streak, longest streak, weekly bar chart, GitHub-style 90-day heatmap, per-category rollup, badge strip with celebration toast, weekly insight card, mini per-habit sparklines, XP/level bar.
 - **Reminders** (cron-driven push) with quiet hours and per-user opt-out for the weekly digest.
 - **Notification feed** persisting every push the system sends.
@@ -90,8 +90,11 @@ AI engine ([`.env.example`](ai_engine/.env.example)):
 
 | Variable | Purpose |
 | --- | --- |
-| `OPENAI_API_KEY` | Enables OpenAI path; absent → deterministic rule-based fallback |
-| `OPENAI_MODEL` | Model name (default `gpt-4o-mini`) |
+| `AI_PROVIDER` | Force a single provider: `claude`, `openai`, or `rule`. Empty → auto (Claude → OpenAI → Rule) |
+| `ANTHROPIC_API_KEY` | Enables Claude path |
+| `ANTHROPIC_MODEL` | Claude model name (default `claude-haiku-4-5`) |
+| `OPENAI_API_KEY` | Enables OpenAI path |
+| `OPENAI_MODEL` | OpenAI model name (default `gpt-4o-mini`) |
 
 Mobile (`EXPO_PUBLIC_*` env so the values reach JS at runtime):
 
