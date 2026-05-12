@@ -1,13 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-    onAuthStateChanged,
-    sendPasswordResetEmail,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signOut,
-    User,
-} from 'firebase/auth';
-import { auth, isFirebaseConfigured } from './firebase';
+import { getFirebaseAuth, isFirebaseConfigured } from './firebase';
+
+// `User` type is referenced for the public API. We use `any` here because
+// importing it statically from `firebase/auth` would force Firebase to
+// evaluate at bundle-load time, which trips the Hermes registration race.
+type User = any;
 
 interface AuthState {
     user: User | null;
@@ -24,6 +21,20 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+// Lazy-require firebase/auth only when we actually need it. Keeps the
+// initial bundle evaluation away from Firebase's component registry,
+// which on Hermes throws "Component auth has not been registered yet"
+// when imported eagerly.
+function loadFirebaseAuth(): typeof import('firebase/auth') | null {
+    if (!isFirebaseConfigured()) return null;
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        return require('firebase/auth');
+    } catch {
+        return null;
+    }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [initializing, setInitializing] = useState(true);
@@ -34,7 +45,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setInitializing(false);
             return;
         }
-        return onAuthStateChanged(auth, (u) => {
+        const fb = loadFirebaseAuth();
+        const auth = getFirebaseAuth();
+        if (!fb || !auth) {
+            setInitializing(false);
+            return;
+        }
+        return fb.onAuthStateChanged(auth, (u: User | null) => {
             setUser(u);
             setInitializing(false);
         });
@@ -46,35 +63,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         mock,
         signIn: async (email, password) => {
             if (mock) {
-                setUser({ uid: email } as User);
+                setUser({ uid: email });
                 return;
             }
-            await signInWithEmailAndPassword(auth, email, password);
+            const fb = loadFirebaseAuth();
+            const auth = getFirebaseAuth();
+            if (!fb || !auth) throw new Error('Firebase auth unavailable');
+            await fb.signInWithEmailAndPassword(auth, email, password);
         },
         signUp: async (email, password) => {
             if (mock) {
-                setUser({ uid: email } as User);
+                setUser({ uid: email });
                 return;
             }
-            await createUserWithEmailAndPassword(auth, email, password);
+            const fb = loadFirebaseAuth();
+            const auth = getFirebaseAuth();
+            if (!fb || !auth) throw new Error('Firebase auth unavailable');
+            await fb.createUserWithEmailAndPassword(auth, email, password);
         },
         sendPasswordReset: async (email) => {
             if (mock) {
-                // Surface a friendly message in dev mode rather than failing silently.
                 throw new Error('Password reset is unavailable in mock mode.');
             }
-            await sendPasswordResetEmail(auth, email);
+            const fb = loadFirebaseAuth();
+            const auth = getFirebaseAuth();
+            if (!fb || !auth) throw new Error('Firebase auth unavailable');
+            await fb.sendPasswordResetEmail(auth, email);
         },
         signOutUser: async () => {
             if (mock) {
                 setUser(null);
                 return;
             }
-            await signOut(auth);
+            const fb = loadFirebaseAuth();
+            const auth = getFirebaseAuth();
+            if (!fb || !auth) return;
+            await fb.signOut(auth);
         },
         getToken: async () => {
             if (mock) return 'mock-token';
-            const u = auth.currentUser;
+            const auth = getFirebaseAuth();
+            const u = auth?.currentUser;
             if (!u) throw new Error('Not signed in');
             return u.getIdToken();
         },

@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 import PrimaryButton from './PrimaryButton';
 import {
     bridgeGoogleIdToken,
@@ -7,22 +9,6 @@ import {
     isGoogleSignInAvailable,
     signInWithApple,
 } from '../services/social-auth';
-
-/** Lazy-loaded so jest/web builds don't trip on the native module. */
-function loadGoogleProviders() {
-    try {
-        return require('expo-auth-session/providers/google') as typeof import('expo-auth-session/providers/google');
-    } catch {
-        return null;
-    }
-}
-function loadWebBrowser() {
-    try {
-        return require('expo-web-browser') as typeof import('expo-web-browser');
-    } catch {
-        return null;
-    }
-}
 
 interface Props {
     onSignedIn: () => void;
@@ -32,28 +18,22 @@ export default function SocialSignInButtons({ onSignedIn }: Props) {
     const googleAvailable = isGoogleSignInAvailable();
     const appleAvailable = isAppleSignInAvailable();
 
-    const Google = googleAvailable ? loadGoogleProviders() : null;
-    const browser = googleAvailable ? loadWebBrowser() : null;
-
-    // Hook must be called unconditionally — fall back to a stub array when not available.
-    const useAuthRequest = (Google as any)?.useAuthRequest as
-        | ((cfg: any) => [any, any, (opts?: any) => Promise<any>])
-        | undefined;
-    const [request, response, promptAsync] = (useAuthRequest
-        ? useAuthRequest({
-            iosClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS,
-            androidClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID,
-            webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB,
-        })
-        : [null, null, async () => null]) as any;
+    // Hook must be called unconditionally to satisfy the rules of hooks.
+    // Even when no client IDs are configured, the hook itself is safe to call
+    // — it just returns a no-op request.
+    const [request, response, promptAsync] = Google.useAuthRequest({
+        iosClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS,
+        androidClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID,
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB,
+    });
 
     useEffect(() => {
-        browser?.maybeCompleteAuthSession?.();
-    }, [browser]);
+        WebBrowser.maybeCompleteAuthSession();
+    }, []);
 
     useEffect(() => {
-        if (response?.type === 'success' && response.params?.id_token) {
-            bridgeGoogleIdToken(response.params.id_token)
+        if (response?.type === 'success' && (response.params as any)?.id_token) {
+            bridgeGoogleIdToken((response.params as any).id_token)
                 .then(onSignedIn)
                 .catch((err) => Alert.alert('Sign-in failed', err?.message ?? 'Unknown error'));
         }
@@ -67,7 +47,7 @@ export default function SocialSignInButtons({ onSignedIn }: Props) {
                 <PrimaryButton
                     title="Sign in with Google"
                     variant="ghost"
-                    onPress={() => promptAsync?.()}
+                    onPress={() => promptAsync()}
                     disabled={!request}
                     accessibilityLabel="Sign in with Google"
                     style={{ flex: 1 }}

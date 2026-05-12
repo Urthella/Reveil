@@ -3,6 +3,7 @@ import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PrimaryButton from '../components/PrimaryButton';
 import SocialSignInButtons from '../components/SocialSignInButtons';
+import { isGoogleSignInAvailable, isAppleSignInAvailable } from '../services/social-auth';
 import { authService } from '../services/api';
 import { useAuth } from '../services/auth';
 import { t } from '../services/i18n';
@@ -111,12 +112,14 @@ export default function LoginScreen({ navigation }: any) {
                             }
                         }}
                     />
-                    <SocialSignInButtons
-                        onSignedIn={async () => {
-                            try { await authService.syncUser(); } catch { /* backend optional */ }
-                            navigation.replace('Dashboard');
-                        }}
-                    />
+                    {(isGoogleSignInAvailable() || isAppleSignInAvailable()) ? (
+                        <SocialSignInButtons
+                            onSignedIn={async () => {
+                                try { await authService.syncUser(); } catch { /* backend optional */ }
+                                navigation.replace('Dashboard');
+                            }}
+                        />
+                    ) : null}
                 </View>
 
                 <Text style={styles.note}>

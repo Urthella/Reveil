@@ -1,39 +1,49 @@
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import {
-    getAuth,
-    initializeAuth,
-    // @ts-ignore - getReactNativePersistence isn't in firebase v10 typings
-    getReactNativePersistence,
-    Auth,
-} from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+/**
+ * Firebase initialization is lazy. We deliberately avoid importing the
+ * `firebase/app` and `firebase/auth` modules at the top level — even an
+ * unused import triggers a Firebase v10 + Hermes component-registration
+ * race that surfaces as a red-box on cold start ("Component auth has not
+ * been registered yet").
+ *
+ * In mock mode (no EXPO_PUBLIC_FIREBASE_API_KEY set) Firebase never loads.
+ * Once a real key is provided, the helpers below dynamically require the
+ * SDK on first use.
+ */
 
-// Set these via app.json -> expo.extra.firebase or via EXPO_PUBLIC_FIREBASE_* env vars.
-// Falls back to a deterministic placeholder so the app still imports cleanly when
-// no Firebase project is configured (auth calls will then fail at runtime).
-const firebaseConfig = {
-    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? 'demo-api-key',
-    authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ?? 'demo.firebaseapp.com',
-    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ?? 'demo-project',
-    appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? '1:0:web:demo',
-};
+const apiKey = process.env.EXPO_PUBLIC_FIREBASE_API_KEY;
+const configured = !!apiKey && apiKey !== 'demo-api-key';
 
-let app: FirebaseApp;
-let auth: Auth;
+export const isFirebaseConfigured = (): boolean => configured;
 
-if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-    try {
-        auth = initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) });
-    } catch {
-        auth = getAuth(app);
-    }
-} else {
-    app = getApps()[0]!;
-    auth = getAuth(app);
+let _app: any = null;
+let _auth: any = null;
+
+function loadFirebase(): { app: any; auth: any } | null {
+    if (!configured) return null;
+    if (_app && _auth) return { app: _app, auth: _auth };
+    // require() instead of import to keep this fully out of the bundle's
+    // initial evaluation path when not configured.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { initializeApp, getApps } = require('firebase/app');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getAuth } = require('firebase/auth');
+    const firebaseConfig = {
+        apiKey,
+        authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+        appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+    };
+    _app = getApps()[0] ?? initializeApp(firebaseConfig);
+    _auth = getAuth(_app);
+    return { app: _app, auth: _auth };
 }
 
-export const isFirebaseConfigured = (): boolean =>
-    !!process.env.EXPO_PUBLIC_FIREBASE_API_KEY && process.env.EXPO_PUBLIC_FIREBASE_API_KEY !== 'demo-api-key';
+/** Resolves to the Firebase Auth instance or null when in mock mode. */
+export function getFirebaseAuth(): any | null {
+    return loadFirebase()?.auth ?? null;
+}
 
-export { app, auth };
+/** Resolves to the FirebaseApp instance or null when in mock mode. */
+export function getFirebaseApp(): any | null {
+    return loadFirebase()?.app ?? null;
+}

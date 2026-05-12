@@ -36,7 +36,8 @@
           "icon": "./assets/icon.png",
           "color": "#6C63FF"
         }
-      ]
+      ],
+      "expo-web-browser"
     ]
   }
 }
