@@ -14,6 +14,20 @@ export class User {
     @Column({ nullable: true })
     photoUrl: string;
 
+    /** Quiet hours start (HH:mm, 24h). Reminders are suppressed between these. */
+    @Column({ nullable: true })
+    quietHoursStart: string;
+
+    @Column({ nullable: true })
+    quietHoursEnd: string;
+
+    @Column({ default: 'en' })
+    locale: string;
+
+    /** Whether the Sunday weekly digest push + email is delivered. */
+    @Column({ default: true })
+    digestEnabled: boolean;
+
     @CreateDateColumn()
     createdAt: Date;
 

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Reveil — AI-powered habit transformation</title>
+<meta name="description" content="Reveil is an AI-powered adaptive habit transformation mobile app — graduation project at Konya Food and Agriculture University." />
+<style>
+  :root {
+    --bg: #0f0f14;
+    --surface: #1a1a22;
+    --border: #2a2a36;
+    --text: #ffffff;
+    --muted: #b0b0c0;
+    --primary: #6c63ff;
+    --accent: #03dac6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: linear-gradient(180deg, #0f0f14 0%, #15151d 100%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  header { padding: 80px 24px 40px; max-width: 960px; margin: 0 auto; text-align: center; }
+  header .brand { color: var(--primary); font-size: 18px; letter-spacing: 4px; }
+  header h1 { font-size: clamp(36px, 6vw, 56px); margin: 16px 0 8px; }
+  header p { color: var(--muted); font-size: 18px; max-width: 640px; margin: 16px auto 0; }
+  .badges { margin-top: 24px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .badge {
+    background: var(--surface); border: 1px solid var(--border); padding: 6px 12px;
+    border-radius: 999px; font-size: 13px; color: var(--muted);
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 24px; }
+  section { margin: 48px 0; }
+  h2 { font-size: 28px; margin-bottom: 16px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 20px; border-radius: 18px;
+  }
+  .card h3 { margin: 0 0 8px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+  pre {
+    background: var(--surface); border: 1px solid var(--border); padding: 16px;
+    border-radius: 12px; overflow-x: auto; font-size: 13px;
+  }
+  a { color: var(--accent); }
+  footer { padding: 48px 24px; text-align: center; color: var(--muted); font-size: 13px; }
+  .stack { color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">REVEIL</div>
+    <h1>AI-powered adaptive habit transformation.</h1>
+    <p>
+      Reveil combines behavioral science with adaptive AI to help users build sustainable habits and
+      navigate addiction recovery. Mobile-first, privacy-respecting, built as the COMP4901 graduation
+      project at Konya Food and Agriculture University.
+    </p>
+    <div class="badges">
+      <span class="badge">React Native · Expo</span>
+      <span class="badge">NestJS · TypeORM</span>
+      <span class="badge">FastAPI · OpenAI</span>
+      <span class="badge">SQLite / Postgres</span>
+      <span class="badge">Firebase Auth</span>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>What it does</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>📋 Habits with depth</h3>
+          <p>Categories, weekly targets, pause-until auto-resume, freeze days that protect streaks, sort, search, 8 quick-start templates.</p>
+        </div>
+        <div class="card">
+          <h3>🤖 Adaptive AI feedback</h3>
+          <p>Locale + tone + category-aware prompts. Rule-based fallback when offline. Every response passes a safety filter.</p>
+        </div>
+        <div class="card">
+          <h3>📊 Real-time analytics</h3>
+          <p>30-day consistency, streak math that survives freeze days, 90-day heatmap, per-category rollup, weekly digest.</p>
+        </div>
+        <div class="card">
+          <h3>🎮 Gamification</h3>
+          <p>XP for completions and streaks, six streak badges with unlock toasts, level-up celebration, progress rings.</p>
+        </div>
+        <div class="card">
+          <h3>🔔 Smart reminders</h3>
+          <p>Per-user quiet hours, weekly digest cron with email + push, deep-link to the right habit on tap.</p>
+        </div>
+        <div class="card">
+          <h3>🔒 Privacy first</h3>
+          <p>JSON + CSV export & import, account deletion, anonymized AI payload. All sensitive endpoints rate-limited.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Architecture</h2>
+      <p class="stack">
+        Three-tier separation between a React Native client, a NestJS API, and a FastAPI AI engine.
+        SQLite for one-command demos, Postgres + TypeORM migrations for production.
+        See the <a href="architecture.md">architecture diagrams</a> and the <a href="TRACEABILITY.md">SRS-to-code matrix</a>.
+      </p>
+<pre>
+┌────────────┐     HTTPS / JWT      ┌────────────┐     HTTP      ┌────────────┐
+│ Mobile App │ ───────────────────► │  Backend   │ ────────────► │ AI Engine  │
+│  (Expo)    │ ◄─────────────────── │  (NestJS)  │ ◄──────────── │ (FastAPI)  │
+└────────────┘                      └────────────┘               └────────────┘
+</pre>
+    </section>
+
+    <section>
+      <h2>Try the demo</h2>
+      <pre>
+git clone &lt;repo&gt; reveil
+cd reveil/backend && npm install && npm run seed && npm run start:dev
+cd ../ai_engine && python -m pip install -r requirements.txt && uvicorn main:app
+cd ../mobile && npm install && npm start
+      </pre>
+      <p class="stack">
+        Tap <strong>“Continue as demo guest”</strong> on the login screen for a pre-seeded data
+        experience — no Firebase project needed.
+      </p>
+    </section>
+
+    <section>
+      <h2>Project info</h2>
+      <p class="stack">
+        Authors: Halil Utku Demirtaş, Furkan Can Karafil ·
+        Supervisor: Prof. Dr. Meltem Huri Baturay Khan ·
+        COMP4901 Graduation Project, January 2026.
+      </p>
+      <p>
+        See <a href="DEFENCE_NOTES.md">DEFENCE_NOTES</a> for the project-defence cheat sheet.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    Reveil — wake up to your habits. © 2026.
+  </footer>
+</body>
+</html>

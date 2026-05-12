@@ -29,4 +29,22 @@ export class UsersService {
 
         return this.usersRepository.save(user);
     }
+
+    async updatePreferences(
+        userId: string,
+        prefs: {
+            quietHoursStart?: string | null;
+            quietHoursEnd?: string | null;
+            locale?: 'en' | 'tr';
+            digestEnabled?: boolean;
+        },
+    ): Promise<User> {
+        const user = await this.findOne(userId);
+        if (!user) throw new Error('User not found');
+        if (prefs.quietHoursStart !== undefined) user.quietHoursStart = prefs.quietHoursStart ?? null as any;
+        if (prefs.quietHoursEnd !== undefined) user.quietHoursEnd = prefs.quietHoursEnd ?? null as any;
+        if (prefs.locale) user.locale = prefs.locale;
+        if (prefs.digestEnabled !== undefined) user.digestEnabled = prefs.digestEnabled;
+        return this.usersRepository.save(user);
+    }
 }
