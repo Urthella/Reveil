@@ -34,3 +34,13 @@ web-build/
 *.sqlite-journal
 *.sqlite-shm
 *.sqlite-wal
+
+# Xcode / iOS native
+*.xcuserstate
+xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
